@@ -1,14 +1,22 @@
-import { Button, Box } from '@chakra-ui/react';
+import { Box } from '@chakra-ui/react';
 import { useMemo } from 'react';
 import { useInfiniteQuery } from 'react-query';
 
+import { Card, CardList } from '../components/CardList';
 import { Header } from '../components/Header';
-import { CardList } from '../components/CardList';
 import { api } from '../services/api';
-import { Loading } from '../components/Loading';
-import { Error } from '../components/Error';
 
 export default function Home(): JSX.Element {
+  const fetchImages = async ({ pageParam = null }) => {
+    try {
+      const { data } = await api.get(`/api/images?after=${pageParam}`);
+
+      return data;
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   const {
     data,
     isLoading,
@@ -16,15 +24,16 @@ export default function Home(): JSX.Element {
     isFetchingNextPage,
     fetchNextPage,
     hasNextPage,
-  } = useInfiniteQuery(
-    'images',
-    // TODO AXIOS REQUEST WITH PARAM
-    ,
-    // TODO GET AND RETURN NEXT PAGE PARAM
-  );
+  } = useInfiniteQuery('images', fetchImages, {
+    getNextPageParam: lastPage => lastPage.after ?? null,
+  });
+
+  console.log(data);
 
   const formattedData = useMemo(() => {
-    // TODO FORMAT AND FLAT DATA ARRAY
+    const flattedData = data.pages.flat().map((data: Card) => data);
+
+    return flattedData;
   }, [data]);
 
   // TODO RENDER LOADING SCREEN
